@@ -159,3 +159,11 @@ print(f"Resposta total agregacao: {aggregation['total_response']:.6f}")
 print(f"Resposta total convolucao: {conv_total_response:.6f}")
 print(f"QLen total convolucao: {conv_total_qlen:.6f}")
 print(f"QLen dos discos na convolucao: {conv_disk_qlen:.6f}")
+
+
+"""A solução por decomposição/agregação agregou os dois discos em um servidor equivalente de fluxo, com demandas D_CPU
+  = 6, D_FastDisk = 1,5 e D_SlowDisk = 1,0; as taxas equivalentes do agregado de discos foram 0,400000 com 1 job e 0,526316 com 2 jobs. O
+  throughput obtido por agregação foi 0,152466, com tempo de resposta total 13,117647, fila média na CPU 1,560538 e fila média agregada dos
+  discos 0,439462. Pela convolução com SolverNC(method="ca"), o throughput da CPU também foi 0,152466, o tempo de resposta total foi 13,117647,
+  e as filas médias foram CPU = 1,5605, FastDisk = 0,26906 e SlowDisk = 0,1704, somando 2 jobs no sistema. Portanto, para esse caso, a
+  decomposição/agregação reproduz exatamente o resultado da convolução, com diferença percentual de throughput igual a 0,00%."""

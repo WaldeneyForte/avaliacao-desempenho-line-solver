@@ -70,3 +70,9 @@ print(f"Tempo de residencia total com MPL 3: {resid_3:.6f} s")
 print(f"Aumento do tempo de residencia total: {resid_increase:.2f}%")
 print(f"Soma dos QLen com MPL 2: {qlen_2:.6f}")
 print(f"Soma dos QLen com MPL 3: {qlen_3:.6f}")
+
+
+""" A saída mostra que, ao aumentar o MPL de 2 para 3, o throughput da CPU sobe de 0,042424 para 0,050382 transações/s,
+  uma melhora de aproximadamente 18,76%; porém, esse ganho vem acompanhado de maior congestionamento, pois o tempo de residência total aumenta
+  de 47,14 s para 59,55 s e o disco lento continua sendo o gargalo, com utilização subindo de 63,64% para 75,57% e fila média de 1,4427. A soma
+  dos tamanhos médios de fila passa de 2 para 3, confirmando a consistência do modelo fechado com a nova população."""

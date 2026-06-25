@@ -71,6 +71,11 @@ print(f"Maior utilizacao original: {original_max_util:.6f}")
 print(f"Maior utilizacao melhorada: {improved_max_util:.6f}")
 print(f"Reducao da maior utilizacao: {max_util_reduction:.2f}%")
 
+
+
+
+
+
 """A saída mostra que substituir o disco lento por um segundo disco rápido melhora o throughput da CPU de 0,042424 para 0,050000
   transações/s, ou seja, um ganho de aproximadamente 17,86%; o tempo de residência total cai de 47,14 s para 40,00 s, redução de cerca de 15,15%. No sistema
   original, o disco lento era o gargalo, com utilização de 63,64%, fila média de 0,90909 e tempo de resposta de 42,857 s; no cenário melhorado, CPU, FastDisk e

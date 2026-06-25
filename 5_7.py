@@ -97,3 +97,11 @@ print(f"Reducao do tempo de residencia total: {resid_reduction:.2f}%")
 
 print("\nTabela detalhada para o p otimo")
 print(best["table"])
+
+
+"""com uma varredura de p entre 0,00 e 1,00 em passos de 0,01, considerando p como a probabilidade de acesso ao disco
+  rápido. A melhor configuração encontrada foi p = 0,77, isto é, aproximadamente 77% dos arquivos no disco rápido e 23% no disco lento; nessa
+  configuração, o throughput da CPU sobe de 0,042424 para 0,045236 transações/s, uma melhora de 6,63%, e o tempo de residência total cai de
+  47,14 s para 44,21 s, redução de 6,22%. O resultado mostra que o desempenho melhora ao deslocar mais arquivos para o disco rápido, mas não é
+  ótimo colocar tudo nele, pois isso concentra fila e utilização no disco rápido; o melhor ponto é aquele que distribui a carga de forma mais
+  equilibrada entre os discos, mantendo a soma dos tamanhos médios de fila igual à população fechada de dois usuários."""
