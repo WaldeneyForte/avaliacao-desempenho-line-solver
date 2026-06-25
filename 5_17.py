@@ -8,6 +8,7 @@ curves. Show all work.
 """
 
 from line_solver import *
+from line_solver.api.pfqn.bounds import pfqn_xzabaup
 
 import contextlib
 import io
@@ -67,14 +68,14 @@ def solver_throughput(population, method):
 
 
 def aba_lower_throughput(population):
+    # The installed SolverMVA ABA wrapper fails for this model; keep the
+    # textbook lower-bound formula to preserve the expected curve.
     response_upper = TOTAL_DEMAND + (population - 1) * BOTTLENECK_DEMAND
     return population / response_upper
 
 
 def aba_upper_throughput(population):
-    light_load_bound = population / TOTAL_DEMAND
-    bottleneck_bound = 1.0 / BOTTLENECK_DEMAND
-    return min(light_load_bound, bottleneck_bound)
+    return pfqn_xzabaup(DEMANDS, population, 0.0)
 
 
 populations = list(range(1, MAX_POPULATION + 1))

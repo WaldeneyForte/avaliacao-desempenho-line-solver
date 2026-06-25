@@ -22,7 +22,7 @@ the interactive users below 1.5 sec?
 from line_solver import *
 
 import contextlib
-import io
+from io import StringIO
 import os
 import warnings
 
@@ -36,6 +36,7 @@ import matplotlib.pyplot as plt
 STATIONS = ["CPU", "D1", "D2"]
 OPEN_CLASSES = ["Q", "U"]
 CLOSED_CLASS = "I"
+ALL_CLASSES = ["Q", "U", "I"]
 BASE_DEMANDS = {
     "CPU": {"Q": 0.060, "U": 0.100, "I": 0.090},
     "D1": {"Q": 0.030, "U": 0.030, "I": 0.045},
@@ -54,68 +55,6 @@ def scaled_demands(cpu_factor=1.0, d1_factor=1.0, d2_factor=1.0):
             for cls, value in class_demands.items()
         }
         for station, class_demands in BASE_DEMANDS.items()
-    }
-
-
-def mixed_mva(demands, arrivals, terminals=BASE_TERMINALS, think_time=THINK_TIME):
-    open_util = {
-        station: sum(arrivals[cls] * demands[station][cls] for cls in OPEN_CLASSES)
-        for station in STATIONS
-    }
-    unstable = {station: util for station, util in open_util.items() if util >= 1.0}
-    if unstable:
-        raise ValueError(f"Open workload is unstable: {unstable}")
-
-    closed_q = {station: 0.0 for station in STATIONS}
-    closed_response_by_station = {station: 0.0 for station in STATIONS}
-    closed_tput = 0.0
-
-    for n in range(1, terminals + 1):
-        closed_response_by_station = {}
-        for station in STATIONS:
-            d = demands[station][CLOSED_CLASS]
-            closed_response_by_station[station] = (
-                d * (1.0 + closed_q[station]) / (1.0 - open_util[station])
-            )
-
-        closed_response = sum(closed_response_by_station.values())
-        closed_tput = n / (think_time + closed_response)
-        closed_q = {
-            station: closed_tput * closed_response_by_station[station]
-            for station in STATIONS
-        }
-
-    open_response_by_class = {}
-    open_q = {station: {cls: 0.0 for cls in OPEN_CLASSES} for station in STATIONS}
-    for cls in OPEN_CLASSES:
-        response = 0.0
-        for station in STATIONS:
-            r_i = (
-                demands[station][cls]
-                * (1.0 + closed_q[station])
-                / (1.0 - open_util[station])
-            )
-            response += r_i
-            open_q[station][cls] = arrivals[cls] * r_i
-        open_response_by_class[cls] = response
-
-    closed_response = sum(closed_response_by_station.values())
-    station_util = {
-        station: open_util[station] + closed_tput * demands[station][CLOSED_CLASS]
-        for station in STATIONS
-    }
-
-    return {
-        "response": {
-            "Q": open_response_by_class["Q"],
-            "U": open_response_by_class["U"],
-            "I": closed_response,
-        },
-        "throughput": {"Q": arrivals["Q"], "U": arrivals["U"], "I": closed_tput},
-        "closed_q": closed_q,
-        "open_q": open_q,
-        "station_util": station_util,
-        "open_util": open_util,
     }
 
 
@@ -162,22 +101,52 @@ def build_line_model(demands, arrivals, terminals=BASE_TERMINALS):
     return model
 
 
-def line_solver_table(demands, arrivals, terminals=BASE_TERMINALS):
+def line_solver_table(demands, arrivals, terminals=BASE_TERMINALS, method="exact"):
     options = SolverOptions()
-    options.method = "exact"
+    options.method = method
     solver = SolverMVA(build_line_model(demands, arrivals, terminals), options)
-    with contextlib.redirect_stdout(io.StringIO()):
-        return solver.get_avg_table()
+    try:
+        with contextlib.redirect_stdout(StringIO()):
+            return solver.get_avg_table()
+    except OverflowError:
+        if method != "exact":
+            raise
+        return line_solver_table(demands, arrivals, terminals, method="default")
 
 
-def print_scenario(name, result):
-    print(f"\n{name}")
-    print("Class  Tput      RespT")
-    for cls in ["Q", "U", "I"]:
-        print(f"{cls:<5} {result['throughput'][cls]:.6f}  {result['response'][cls]:.6f}")
-    print("Station utilization")
-    for station in STATIONS:
-        print(f"{station:<4} {result['station_util'][station]:.6f}")
+def class_rows(table, cls):
+    return table.data[
+        (table.data["JobClass"] == cls)
+        & (table.data["Station"].isin(STATIONS))
+    ]
+
+
+def class_response(table, cls):
+    return float(class_rows(table, cls)["RespT"].sum())
+
+
+def class_throughput(table, cls):
+    rows = class_rows(table, cls)
+    if rows.empty:
+        return 0.0
+    return float(rows["Tput"].iloc[0])
+
+
+def aggregate_station_util(table, station):
+    rows = table.data[table.data["Station"] == station]
+    return float(rows["Util"].sum())
+
+
+def line_solver_result(demands, arrivals, terminals=BASE_TERMINALS):
+    table = line_solver_table(demands, arrivals, terminals)
+    return {
+        "table": table,
+        "response": {cls: class_response(table, cls) for cls in ALL_CLASSES},
+        "throughput": {cls: class_throughput(table, cls) for cls in ALL_CLASSES},
+        "station_util": {
+            station: aggregate_station_util(table, station) for station in STATIONS
+        },
+    }
 
 
 def percent_change(new, old):
@@ -192,14 +161,16 @@ base_demands = scaled_demands()
 base_arrivals = BASE_ARRIVALS.copy()
 high_q_arrivals = {"Q": BASE_ARRIVALS["Q"] * 1.95, "U": BASE_ARRIVALS["U"]}
 
-base = mixed_mva(base_demands, base_arrivals)
-high_q = mixed_mva(base_demands, high_q_arrivals)
-d1_upgrade = mixed_mva(scaled_demands(d1_factor=2.0), high_q_arrivals)
-cpu_upgrade = mixed_mva(scaled_demands(cpu_factor=2.0), high_q_arrivals)
+base = line_solver_result(base_demands, base_arrivals)
+high_q = line_solver_result(base_demands, high_q_arrivals)
+d1_upgrade = line_solver_result(scaled_demands(d1_factor=2.0), high_q_arrivals)
+cpu_upgrade = line_solver_result(scaled_demands(cpu_factor=2.0), high_q_arrivals)
 
 terminals = list(range(50, 251, 10))
 interactive_responses = [
-    mixed_mva(scaled_demands(cpu_factor=2.0), high_q_arrivals, terminals=m)["response"]["I"]
+    line_solver_result(
+        scaled_demands(cpu_factor=2.0), high_q_arrivals, terminals=m
+    )["response"]["I"]
     for m in terminals
 ]
 supported = [
@@ -225,7 +196,7 @@ print("I: D_CPU=0.090, D_D1=0.045, D_D2=0.000, M=50, Z=15")
 
 print("\n(a) Tempo medio de resposta no cenario base")
 print("Classe  Throughput  Tempo_resposta")
-for cls in ["Q", "U", "I"]:
+for cls in ALL_CLASSES:
     print(f"{cls:<6} {base['throughput'][cls]:.6f}    {base['response'][cls]:.6f} s")
 
 print("\nUtilizacao dos dispositivos no cenario base")
@@ -235,7 +206,7 @@ for station in STATIONS:
 
 print("\n(b) Impacto de aumentar a chegada de Q em 95%")
 print("Classe  R_base     R_Q+95%    Variacao")
-for cls in ["Q", "U", "I"]:
+for cls in ALL_CLASSES:
     change = percent_change(high_q["response"][cls], base["response"][cls])
     print(
         f"{cls:<6} {base['response'][cls]:.6f}  "
@@ -249,7 +220,7 @@ for station in STATIONS:
 
 print("\n(c) Comparacao dos upgrades no cenario com Q aumentado em 95%")
 print("Classe  R_Q+95%   R_D1_2x   Red_D1   R_CPU_2x  Red_CPU")
-for cls in ["Q", "U", "I"]:
+for cls in ALL_CLASSES:
     d1_reduction = percent_reduction(d1_upgrade["response"][cls], high_q["response"][cls])
     cpu_reduction = percent_reduction(cpu_upgrade["response"][cls], high_q["response"][cls])
     print(
@@ -274,7 +245,5 @@ for m, response in zip(terminals, interactive_responses):
 print(f"Maximum terminals with R_I < 1.5 sec: {max_supported}")
 print("Graph saved to 6_3_response_vs_terminals.png")
 
-print("\nValidacao: tabela do LINE Solver para o cenario base")
-print(line_solver_table(base_demands, base_arrivals))
-
-""" No cenário base, os tempos médios de resposta são Q = 0,287188 s, U = 0,436212 s e I = 0,295661 s. Ao aumentar a taxa de chegada das queries em 95%, os tempos pioram para Q = 0,442633 s, U = 0,686759 s e I = 0,478392 s, principalmente devido ao aumento da utilização da CPU. Com essa carga maior, substituir o disco D1 por um duas vezes mais rápido reduz pouco os tempos de resposta, enquanto substituir a CPU por uma duas vezes mais rápida produz uma melhoria muito maior, reduzindo os tempos para Q = 0,214089 s, U = 0,305696 s e I = 0,145341 s. No estudo com a taxa de queries aumentada e a CPU duas vezes mais rápida, o tempo de resposta dos usuários interativos permanece abaixo de 1,5 s para todos os valores entre 50 e 250 terminais; portanto, dentro do intervalo analisado, o máximo suportado é 250 terminais.."""
+print("\nTabela do LINE Solver para o cenario base")
+print(base["table"])
