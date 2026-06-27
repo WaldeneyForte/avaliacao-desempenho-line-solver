@@ -247,3 +247,11 @@ print("Graph saved to 6_3_response_vs_terminals.png")
 
 print("\nTabela do LINE Solver para o cenario base")
 print(base["table"])
+
+
+"""No cenário base, os tempos médios de resposta são baixos para as três classes, com Q = 0,287 s, U = 0,436 s e I = 0,296
+  s, e a CPU é o dispositivo mais utilizado, com utilização de aproximadamente 62,42%. Ao aumentar a chegada da classe Q em
+  95%, os tempos de resposta crescem significativamente em todas as classes, especialmente para os usuários interativos, cuja
+  variação chega a 61,80%, e a CPU sobe para 79,17% de utilização. Na comparação dos upgrades, dobrar a CPU reduz muito mais o
+  tempo de resposta do que dobrar o disco D1, indicando que a CPU é o principal gargalo do sistema nesse cenário de maior
+  carga. Mesmo com até 250 terminais, o tempo de resposta da classe interativa permanece abaixo de 1,5 s."""

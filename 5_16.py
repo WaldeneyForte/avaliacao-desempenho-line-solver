@@ -152,3 +152,11 @@ print(f"Resposta total agregacao: {aggregation['total_response']:.6f}")
 print(f"Resposta total convolucao: {conv_total_response:.6f}")
 print(f"QLen total convolucao: {conv_total_qlen:.6f}")
 print(f"QLen dos discos na convolucao: {conv_disk_qlen:.6f}")
+
+
+"""A saída mostra que a técnica de decomposição/agregação pelo LINE Solver produz os mesmos resultados globais da
+  convolução pelo SolverNC, com throughput de 0,152466 e tempo de resposta total de 13,117647. A CPU apresenta utilização
+  elevada, aproximadamente 91,48%, e concentra a maior parte dos jobs, com QLen = 1,5605, indicando que ela é o principal
+  gargalo do sistema. O agregado dos discos possui fila média menor, 0,4395, e a comparação confirma diferença percentual de
+  0,00% no throughput entre agregação e convolução, mostrando que a aproximação agregada representou corretamente o
+  comportamento global do sistema."""

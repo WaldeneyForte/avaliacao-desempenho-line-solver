@@ -203,3 +203,10 @@ original = run_scenario("Original Sec. 6.2 model", ORIGINAL_POPULATION)
 tripled = run_scenario(
     "Update class multiprogramming tripled", TRIPLED_UPDATE_POPULATION
 )
+
+"""A saída mostra que, no modelo original, a classe Query tem throughput de aproximadamente 4,09 e tempo de resposta de
+  0,73, enquanto a classe Update tem throughput menor, cerca de 0,41, e tempo de resposta maior, 2,44. O Disk1 concentra os
+  maiores tamanhos médios de fila, principalmente para Query, com QLen = 2,1664, indicando que ele é o principal ponto de
+  contenção. Quando a multiprogramação da classe Update é triplicada, o throughput de Update aumenta para 0,9064, mas o tempo
+  de resposta também cresce para 3,31, e o Disk1 continua acumulando a maior fila, agora com forte presença de jobs Update,
+  confirmando que o aumento de carga intensifica o gargalo nesse dispositivo."""

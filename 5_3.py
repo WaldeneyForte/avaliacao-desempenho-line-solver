@@ -27,5 +27,5 @@ model.link(P)
 solver = SolverMVA(model)
 print(solver.get_avg_table())
 
-
 #A saída mostra o desempenho do sistema original com dois usuários ativos. A CPU apresenta utilização de aproximadamente 42,42%, com throughput de 0,042424 transações por segundo e tamanho médio de fila de 0,54545 jobs. O disco rápido também possui utilização de 42,42%, porém seu throughput é 0,021212 jobs/s, pois é acessado apenas em metade das transações. Já o disco lento apresenta a maior utilização, 63,64%, além do maior tamanho médio de fila, 0,90909, e do maior tempo médio de resposta, 42,857 s. Isso indica que o disco lento é o principal gargalo do sistema, pois concentra maior tempo de espera e maior ocupação em comparação aos demais dispositivos. Como a soma dos tamanhos médios de fila é aproximadamente 2, o resultado é consistente com a população fechada de dois usuários no sistema.
+#

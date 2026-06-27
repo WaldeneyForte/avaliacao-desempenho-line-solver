@@ -142,3 +142,10 @@ print("\nGraph saved to 5_17_bounds.png")
 
 
 """A análise da Figura 5.6 usa os parâmetros μ_CPU = 10, μ_fast = 8, μ_slow = 6, com probabilidade p = 0,7 de acesso ao disco rápido e 0,3 ao disco lento. As demandas médias por job são D_CPU = 0,100000, D_fast = 0,087500 e D_slow = 0,050000, resultando em demanda total D = 0,237500 e gargalo na CPU, pois Dmax = 0,100000. Para N = 3, o throughput real obtido por MVA é 7,327103 jobs por unidade de tempo, enquanto os limites ABA são 6,857143 como limite inferior e 10,000000 como limite superior. As curvas mostram que, à medida que o nível de multiprogramação aumenta, o throughput cresce e se aproxima do limite assintótico de 10, imposto pelo gargalo da CPU. No gráfico, as curvas BJB ficaram sobrepostas à curva real, indicando que, para este exemplo, esses limites são bastante apertados."""
+
+
+"""Os resultados mostram que o throughput real cresce com o aumento da população N, partindo de 4,2105 para N = 1 e se
+  aproximando gradualmente do limite superior de 10, definido pelo gargalo do sistema. No ponto destacado da Figura 5.6, com N
+  = 3, o throughput real é 7,3271, ficando acima do limite inferior ABA de 6,8571 e abaixo do limite superior ABA de 10, como
+  esperado. A demanda máxima é a da CPU, com Dmax = 0,1, o que faz dela o recurso limitante para populações maiores; por isso,
+  à medida que N aumenta, o throughput se aproxima da capacidade máxima imposta por esse gargalo."""
